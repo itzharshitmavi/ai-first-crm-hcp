@@ -140,7 +140,37 @@ frontend/
 - A running MySQL server (or update `DATABASE_URL` to point at Postgres/SQLite instead)
 - A Groq API key — create one at [console.groq.com](https://console.groq.com)
 
-### 1. Backend
+## 1. Database Setup
+
+1. Log in to MySQL:
+
+```bash
+mysql -u root -p
+```
+
+2. Create the database:
+
+```sql
+CREATE DATABASE ai_first_crm CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+3. Create a database user:
+
+```sql
+CREATE USER 'crm_user'@'localhost' IDENTIFIED BY 'crm_pass';
+GRANT ALL PRIVILEGES ON ai_first_crm.* TO 'crm_user'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+4. Import the provided database dump:
+
+```bash
+mysql -u crm_user -p ai_first_crm < ai_first_crm.sql
+```
+
+Alternatively, you can import `ai_first_crm.sql` using MySQL Workbench or Valentina Studio.
+
+### 2. Backend
 
 From the `backend` folder:
 
@@ -176,7 +206,7 @@ named 'app'`.
 Verify it's up: [http://127.0.0.1:8000/api/health](http://127.0.0.1:8000/api/health)
 should return `{"status": "ok"}`.
 
-### 2. Frontend
+### 3. Frontend
 
 From the `frontend` folder:
 
@@ -192,6 +222,23 @@ Open the URL Vite prints (typically `http://localhost:5173`). The dev server pro
 > `http://127.0.0.1:5173` by default (see `main.py`). If your frontend runs on a
 > different port, update `allow_origins` in `main.py` to match, or requests will be
 > silently blocked by the browser even though the backend processes them successfully.
+
+### Optional: Connecting with VS Code
+
+The project was developed using the **SQLTools** VS Code extension to connect to the MySQL database. If you want to inspect or manage the database directly from VS Code, install the following extensions:
+
+- SQLTools
+- SQLTools MySQL/MariaDB Driver
+
+Create a new SQLTools connection with:
+
+- **Database:** `ai_first_crm`
+- **Server:** `127.0.0.1`
+- **Port:** `3306`
+- **Username:** `crm_user`
+- **Password:** `crm_pass`
+
+This step is optional and is only needed if you want to browse or manage the database from VS Code.
 
 ---
 
