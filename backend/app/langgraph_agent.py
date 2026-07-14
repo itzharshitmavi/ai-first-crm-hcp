@@ -48,6 +48,22 @@ class CRMGraphService:
             prompt=self._system_prompt(),
         )
 
+        # Groq occasionally emits a malformed "<function=name{...}>" string
+        # instead of a proper tool call (a known issue with several Groq-hosted
+        # models). Groq's own docs recommend retrying with an adjusted
+        # temperature when this happens, so we keep a second agent instance
+        # at a nonzero temperature purely as a one-shot retry fallback.
+        self._retry_model = ChatGroq(
+            model=DEFAULT_GROQ_MODEL,
+            api_key=GROQ_API_KEY,
+            temperature=0.4,
+        )
+        self._retry_agent = create_react_agent(
+            self._retry_model,
+            self.tools,
+            prompt=self._system_prompt(),
+        )
+
     def _system_prompt(self):
 
         return """
@@ -302,16 +318,24 @@ body
             )
         except groq.BadRequestError:
             # The model emitted a malformed / non-JSON tool call and Groq's
-            # server-side parser rejected it. Fail soft instead of 500ing.
-            return AgentResult(
-                reply=(
-                    "I had trouble structuring that request. Could you "
-                    "rephrase the notes, e.g. 'I met Dr. X, a Cardiologist "
-                    "at Y Hospital, we discussed Z...'?"
-                ),
-                tool_name=None,
-                tool_result=None,
-            )
+            # server-side parser rejected it. This is a known, intermittent
+            # issue with some Groq-hosted models, not a bug in the request
+            # itself -- Groq's own docs recommend retrying with an adjusted
+            # temperature. Try once more before giving up.
+            try:
+                result = self._retry_agent.invoke(
+                    {"messages": [HumanMessage(content=message)]}
+                )
+            except groq.BadRequestError:
+                return AgentResult(
+                    reply=(
+                        "I had trouble structuring that request. Could you "
+                        "rephrase the notes, e.g. 'I met Dr. X, a Cardiologist "
+                        "at Y Hospital, we discussed Z...'?"
+                    ),
+                    tool_name=None,
+                    tool_result=None,
+                )
         except json.JSONDecodeError:
             # A tool ran but the model's JSON body couldn't be parsed.
             return AgentResult(

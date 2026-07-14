@@ -58,6 +58,16 @@ function App() {
     [values.aiSuggestedFollowups],
   )
 
+ const asStringArray = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === 'string')
+  }
+  if (typeof value === 'string' && value.trim()) {
+    return value.split(',').map((item) => item.trim()).filter(Boolean)
+  }
+  return []
+}
+
  const populateFromAssistant = (payload: AssistantResponsePayload) => {
 
   const opts = { shouldDirty: true, shouldValidate: true, shouldTouch: true } as const
@@ -87,7 +97,7 @@ function App() {
   }
 
   if (payload.attendees) {
-    setValue("attendees", payload.attendees, opts)
+    setValue("attendees", asStringArray(payload.attendees), opts)
   }
 
   if (payload.summary) {
@@ -95,11 +105,11 @@ function App() {
   }
 
   if (payload.materials_shared) {
-    setValue("materialsShared", payload.materials_shared, opts)
+    setValue("materialsShared", asStringArray(payload.materials_shared), opts)
   }
 
   if (payload.samples_distributed) {
-    setValue("samplesDistributed", payload.samples_distributed, opts)
+    setValue("samplesDistributed", asStringArray(payload.samples_distributed), opts)
   }
 
   if (payload.sentiment) {

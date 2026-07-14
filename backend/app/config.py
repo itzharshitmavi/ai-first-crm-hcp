@@ -14,4 +14,5 @@ DEFAULT_GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")  #The mo
 FALLBACK_CHAT_MODEL = os.getenv("GROQ_FALLBACK_MODEL", "llama-3.3-70b-versatile")
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./crm.db")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
+print(os.getenv("GROQ_API_KEY"))
 ALLOW_MOCK_LLM = os.getenv("ALLOW_MOCK_LLM", "1") == "1"
